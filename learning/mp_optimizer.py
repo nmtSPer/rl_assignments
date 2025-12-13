@@ -7,7 +7,6 @@ class MPOptimizer():
 
     def __init__(self, config, param_list):
         self._param_list = param_list
-        self._grad_list = None
         self._optimizer = self._build_optimizer(config, param_list)
         self._steps = 0
         
@@ -73,13 +72,8 @@ class MPOptimizer():
         return synced
 
     def _aggregate_mp_grads(self):
-        if (self._grad_list is None):
-            self._grad_list = [p.grad for p in self._param_list]
-
-        self._param_buffer[:] = torch.nn.utils.parameters_to_vector(self._grad_list)
+        grad_list = [p.grad for p in self._param_list]
+        self._param_buffer[:] = torch.nn.utils.parameters_to_vector(grad_list)
         mp_util.reduce_inplace_mean(self._param_buffer)
-        torch.nn.utils.vector_to_parameters(self._param_buffer, self._grad_list)
-        
-        # add a barrier to prevent potential race conditions on some GPUs
-        torch.distributed.barrier()
+        torch.nn.utils.vector_to_parameters(self._param_buffer, grad_list)
         return
