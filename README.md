@@ -1,5 +1,11 @@
 # RL Assignments
 
+<p align="center">
+  <img src="images/walker.gif" width="35%" style="margin-right: 1px;">
+  <img src="images/cheetah.gif" width="35%" style="margin-right: 1px;">
+  <img src="images/pong.gif" width="26.2%">
+</p>
+
 Template code for reinforcement learning assignments.
 
 ## Getting Started
