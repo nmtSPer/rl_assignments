@@ -33,7 +33,6 @@ class TBLogger(logger.Logger):
         super().configure_output_file(filename)
 
         output_dir = os.path.dirname(filename)
-        self._delete_event_files(output_dir)
         self._writer = tensorboardX.SummaryWriter(output_dir)
 
         if (self._run_tb):
@@ -80,16 +79,6 @@ class TBLogger(logger.Logger):
         if (name not in self._collections):
             self._collections[name] = []
         self._collections[name].append(key)
-        return
-
-    def _delete_event_files(self, dir):
-        if (os.path.exists(dir)):
-            files = os.listdir(dir)
-            for file in files:
-                if ("events.out.tfevents." in file):
-                    file_path = os.path.join(dir, file)
-                    print("Deleting event file: {:s}".format(file_path))
-                    os.remove(file_path)
         return
 
     def _build_key_tags(self):

@@ -26,7 +26,7 @@ class AtariEnv(base_env.BaseEnv):
         return self._curr_obs, self._curr_info
 
     def step(self, action):
-        a = action.cpu().numpy()[0]
+        a = action.detach().cpu().numpy()[0]
         obs, reward, terminated, truncated, info = self._env.step(a)
         self._curr_obs = self._convert_obs(obs)
         self._curr_info = info

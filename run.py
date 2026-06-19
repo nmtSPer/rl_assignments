@@ -28,6 +28,8 @@ def load_args(argv):
     parser.add_argument("--log_file", dest="log_file", type=str, default="output/log.txt")
     parser.add_argument("--out_model_file", dest="out_model_file", type=str, default="output/model.pt")
     parser.add_argument("--int_output_dir", dest="int_output_dir", type=str, default="")
+    parser.add_argument("--run_name", dest="run_name", type=str, default="")
+    parser.add_argument("--no_timestamp_output", dest="timestamp_output", action="store_false", default=True)
     parser.add_argument("--model_file", dest="model_file", type=str, default="")
     parser.add_argument("--max_samples", dest="max_samples", type=np.int64, default=np.iinfo(np.int64).max)
     parser.add_argument("--test_episodes", dest="test_episodes", type=np.int64, default=np.iinfo(np.int64).max)
@@ -37,6 +39,49 @@ def load_args(argv):
     args = parser.parse_args()
 
     return args
+
+def make_safe_name(name):
+    safe_chars = []
+    for c in name:
+        if c.isalnum() or c in ("-", "_"):
+            safe_chars.append(c)
+        else:
+            safe_chars.append("_")
+    return "".join(safe_chars)
+
+def get_config_name(config_file):
+    name = os.path.basename(config_file)
+    name, _ = os.path.splitext(name)
+    return make_safe_name(name)
+
+def setup_timestamp_output(args):
+    if (args.mode != "train" or not args.timestamp_output):
+        return
+
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    if (args.run_name != ""):
+        run_name = make_safe_name(args.run_name)
+    else:
+        env_name = get_config_name(args.env_config)
+        agent_name = get_config_name(args.agent_config)
+        run_name = "{:s}_{:s}_{:s}".format(env_name, agent_name, timestamp)
+
+    output_root = os.path.dirname(args.log_file)
+    if (output_root == ""):
+        output_root = "output"
+
+    run_dir = os.path.join(output_root, "runs", run_name)
+    log_name = os.path.basename(args.log_file)
+    model_name = os.path.basename(args.out_model_file)
+
+    args.log_file = os.path.join(run_dir, log_name)
+    args.out_model_file = os.path.join(run_dir, model_name)
+
+    if (args.int_output_dir != ""):
+        args.int_output_dir = os.path.join(run_dir, os.path.basename(args.int_output_dir))
+
+    print("Run output directory: {}".format(run_dir))
+    return
 
 def build_env(args, device, visualize):
     env_file = args.env_config
@@ -118,6 +163,7 @@ def run(rank, num_procs, master_port, args):
 
 def main(argv):
     args = load_args(argv)
+    setup_timestamp_output(args)
     master_port = args.master_port
     num_workers = args.num_workers
     assert(num_workers > 0)

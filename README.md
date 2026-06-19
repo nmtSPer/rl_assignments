@@ -35,6 +35,7 @@ python run.py --env_config data/envs/dm_cheetah.yaml --agent_config a2/dm_cheeta
 - `--log_file` specifies the output log file, which will keep track of statistics during training.
 - `--out_model_file` specifies the output model file, which contains the model parameters.
 - `--num_workers` specifies the number of worker processes used to parallelize training.
+- By default, training outputs are written to a timestamped run directory under `output/runs/`. For example, `--log_file output/log.txt` will become `output/runs/[run_name]/log.txt`. Use `--run_name [name]` to choose the run directory name, or `--no_timestamp_output` to write exactly to the paths passed on the command line.
 
 ## Testing
 
@@ -52,7 +53,7 @@ python run.py --env_config data/envs/dm_cheetah_env.yaml --agent_config a2/dm_ch
 During training, a tensorboard `events` file will be saved the same output directory as the log file. The log can be viewed with:
 
 ```
-tensorboard --logdir=output/ --port=6006 --bind_all
+tensorboard --logdir=output/runs/ --port=6006 --bind_all
 ```
 
 
