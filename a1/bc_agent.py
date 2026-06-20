@@ -126,8 +126,8 @@ class BCAgent(base_agent.BaseAgent):
         # a = torch.zeros(a_space.shape, device=self._device)
 
         norm_obs = self._obs_norm.normalize(obs)
-        a_dist = self._model.eval_actor(norm_obs)
-        norm_a = a_dist.sample()
+        norm_a_dist = self._model.eval_actor(norm_obs)
+        norm_a = norm_a_dist.sample()
         a = self._a_norm.unnormalize(norm_a)
 
         ## b) query the expert for an action
