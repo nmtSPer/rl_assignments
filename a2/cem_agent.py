@@ -134,7 +134,8 @@ class CEMAgent(base_agent.BaseAgent):
         param_size = self._param_mean.shape[0]
 
         # placeholder
-        candidates = torch.zeros([n, param_size], device=self._device)
+        # candidates = torch.zeros([n, param_size], device=self._device)
+        candidates = self._param_mean + self._param_std * torch.randn(size=[n, param_size], device=self._device)
 
         return candidates
 
@@ -153,6 +154,12 @@ class CEMAgent(base_agent.BaseAgent):
         rets = torch.zeros(n, dtype=torch.float64, device=self._device)
         ep_lens = torch.zeros(n, dtype=torch.float64, device=self._device)
 
+        for i in range(n):
+            torch.nn.utils.vector_to_parameters(candidates[i], self._model.parameters())
+            test_info = self._rollout_test(self._eps_per_candidate)
+            rets[i] = test_info["mean_return"]
+            ep_lens[i] = test_info["mean_ep_len"]
+
         return rets, ep_lens
 
     def _compute_new_params(self, params, rets):
@@ -167,5 +174,13 @@ class CEMAgent(base_agent.BaseAgent):
         # placeholder
         new_mean = torch.zeros(param_size, device=self._device)
         new_std = torch.ones(param_size, device=self._device)
+
+        num_elite = int(np.ceil(self._elite_ratio * params.shape[0]))
+        elite_idxs = np.argsort(rets)[-num_elite:]
+        elite_idxs = torch.as_tensor(elite_idxs, device=self._device)
+        elite_params = params[elite_idxs]
+        new_mean = torch.mean(elite_params, dim = 0)
+        new_std = torch.std(elite_params, dim = 0, unbiased = False)
+        new_std = torch.clamp_min(new_std,  min = self._min_param_std)
 
         return new_mean, new_std
