@@ -2,15 +2,31 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from functools import reduce
+import glob
 
 import sys
-sys.path.append(os.getcwd())
+repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.append(repo_root)
 
 import tools.util.plot_util as plot_util
 
-files = [
-    "output/log.txt",
-]
+def resolve_path(path):
+    if os.path.isabs(path):
+        return path
+    return os.path.join(repo_root, path)
+
+def get_default_files():
+    log_file = resolve_path("output/log.txt")
+    if os.path.exists(log_file):
+        return [log_file]
+
+    run_logs = glob.glob(resolve_path("output/runs/*/log.txt"))
+    if len(run_logs) > 0:
+        return [max(run_logs, key=os.path.getmtime)]
+
+    return [log_file]
+
+files = get_default_files()
 
 draw_band = True
 x_key = "Samples"
@@ -34,12 +50,13 @@ filter_window_size = 1
 
 for f, file_group in enumerate(files):
     if not isinstance(file_group, list):
-        if os.path.isdir(file_group):
-            files = os.listdir(file_group)
+        file_group_path = resolve_path(file_group)
+        if os.path.isdir(file_group_path):
+            files = os.listdir(file_group_path)
             files = filter(lambda f: "log" in f, files)
-            file_group = list(map(lambda f: file_group + "/" + f, files))
+            file_group = list(map(lambda f: os.path.join(file_group_path, f), files))
         else:
-            file_group = [file_group]
+            file_group = [file_group_path]
 
     x_data = []
     y_data = []
