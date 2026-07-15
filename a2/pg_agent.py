@@ -198,6 +198,13 @@ class PGAgent(base_agent.BaseAgent):
         
         # placeholder
         return_t = torch.zeros_like(r)
+        running_return = torch.zeros((), dtype=r.dtype, device=r.device)
+        for i in range(len(r) - 1, -1, -1):
+            if done[i]:
+                running_return = r[i]
+            else:
+                running_return = self._discount * running_return + r[i]
+            return_t[i] = running_return
         return return_t
 
     def _calc_adv(self, norm_obs, ret):
@@ -208,6 +215,7 @@ class PGAgent(base_agent.BaseAgent):
         
         # placeholder
         adv = torch.zeros_like(ret)
+        adv = ret - self._model.eval_critic(norm_obs).detach().squeeze(-1)
         return adv
 
     def _calc_critic_loss(self, norm_obs, tar_val):
@@ -219,6 +227,8 @@ class PGAgent(base_agent.BaseAgent):
         
         # placeholder
         loss = torch.zeros(1, device=self._device)
+        pred_val = self._model.eval_critic(norm_obs).squeeze(-1)
+        loss = torch.mean((tar_val - pred_val) ** 2)
         return loss
 
     def _calc_actor_loss(self, norm_obs, norm_a, adv):
