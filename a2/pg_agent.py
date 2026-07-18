@@ -207,7 +207,7 @@ class PGAgent(base_agent.BaseAgent):
         '''
         
         # placeholder
-        adv = torch.zeros_like(ret)
+        adv = torch.zeros_like(ret)  
         return adv
 
     def _calc_critic_loss(self, norm_obs, tar_val):
